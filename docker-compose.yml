@@ -1,0 +1,13 @@
+version: "3"
+services:
+  redis:
+    restart: always
+    build: ./redis
+    ports:
+      - 6379:6379
+  go:
+    build: .
+    depends_on: 
+      - redis
+    ports:
+      - 80:80

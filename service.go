@@ -20,7 +20,12 @@ func serveConn(c net.Conn) {
 	}
 	if n := br.Buffered(); n > 0 {
 		peeked, _ := br.Peek(br.Buffered())
-		handleConn(c, peeked, ip, hh)
+		ca, err := getCache(peeked)
+		if err != nil {
+			handleConn(c, peeked, ip, hh)
+		} else {
+			c.Write(ca)
+		}
 	}
 }
 
@@ -37,25 +42,33 @@ func handleConn(c net.Conn, p []byte, ip net.IP, h string) {
 		return
 	}
 	buf := make([]byte, 0xffff)
+	ok := true
+	ca := make([]byte, 0)
 	for {
 		n, err := rConn.Read(buf)
 		if err != nil {
 			if err != io.EOF {
 				log.Println(err)
+				ok = false
 			}
 			break
 		}
 		b := buf[:n]
 		n, err = c.Write(b)
+		ca = append(ca, b...)
 		if err != nil {
 			log.Println(err)
+			ok = false
 			break
 		}
 	}
-
+	if ok && len(ca) > 0 {
+		go setCache(p, ca)
+	}
 }
 
 func serveSurrogate() {
+	initRedis()
 	ln, err := net.Listen("tcp", "0.0.0.0:80")
 	if err != nil {
 		log.Fatal(err)
