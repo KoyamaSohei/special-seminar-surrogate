@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/go-redis/redis/v7"
 )
@@ -9,9 +10,11 @@ import (
 var client *redis.Client
 
 func initRedis() {
+	h := os.Getenv("REDIS_HOST")
+	p := os.Getenv("REDIS_PASS")
 	client = redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
-		Password: "",
+		Addr:     h + ":6379",
+		Password: p,
 		DB:       0,
 	})
 	if client == nil {
