@@ -12,15 +12,17 @@ func serveEcho() {
 
 	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) {
 		m := new(dns.Msg)
-		if r.Question[0].Qtype != dns.TypeA {
-			return
-		}
 		m.SetReply(r)
-		rr := &dns.A{
-			Hdr: dns.RR_Header{Name: r.Question[0].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
-			A:   net.ParseIP(i),
+		for _, q := range r.Question {
+			if q.Qtype == dns.TypeA {
+				rr := &dns.A{
+					Hdr: dns.RR_Header{Name: r.Question[0].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
+					A:   net.ParseIP(i),
+				}
+				m.Answer = append(m.Answer, rr)
+			}
 		}
-		m.Answer = append(m.Answer, rr)
+
 		w.WriteMsg(m)
 	})
 
