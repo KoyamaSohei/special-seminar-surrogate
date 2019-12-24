@@ -9,10 +9,14 @@ import (
 
 func serveConn(c net.Conn) {
 	br := bufio.NewReader(c)
-	hh := httpHostHeader(br)
-	log.Println(hh)
+	rq := httpHostHeader(br)
+	h := rq.Host
+	if rq == nil || h == "" {
+		return
+	}
+	log.Println(h)
 	ret := make(chan net.IP)
-	go resolveName(hh+".", ret)
+	go resolveName(h+".", ret)
 	ip := <-ret
 	if ip == nil {
 		log.Println("ip not found")
@@ -22,7 +26,7 @@ func serveConn(c net.Conn) {
 		peeked, _ := br.Peek(br.Buffered())
 		ca, err := getCache(peeked)
 		if err != nil {
-			handleConn(c, peeked, ip, hh)
+			handleConn(c, peeked, ip, h)
 		} else {
 			c.Write(ca)
 		}

@@ -6,14 +6,13 @@ import (
 	"net/http"
 )
 
-func httpHostHeader(br *bufio.Reader) string {
-	const maxPeek = 4 << 10
+func httpHostHeader(br *bufio.Reader) *http.Request {
+	const maxPeek = 4 << 16
 	peekSize := 0
 	for {
 		peekSize++
 		if peekSize > maxPeek {
-			b, _ := br.Peek(br.Buffered())
-			return httpHostHeaderFromBytes(b)
+			return nil
 		}
 		b, err := br.Peek(peekSize)
 		if n := br.Buffered(); n > peekSize {
@@ -22,47 +21,26 @@ func httpHostHeader(br *bufio.Reader) string {
 		}
 		if len(b) > 0 {
 			if b[0] < 'A' || b[0] > 'Z' {
-				return ""
+				return nil
 			}
 			if bytes.Index(b, crlfcrlf) != -1 || bytes.Index(b, lflf) != -1 {
 				req, err := http.ReadRequest(bufio.NewReader(bytes.NewReader(b)))
 				if err != nil {
-					return ""
+					return nil
 				}
 				if len(req.Header["Host"]) > 1 {
-					return ""
+					return nil
 				}
-				return req.Host
+				return req
 			}
 		}
 		if err != nil {
-			return httpHostHeaderFromBytes(b)
+			return nil
 		}
 	}
 }
 
 var (
-	lfHostColon = []byte("\nHost:")
-	lfhostColon = []byte("\nhost:")
-	crlf        = []byte("\r\n")
-	lf          = []byte("\n")
-	crlfcrlf    = []byte("\r\n\r\n")
-	lflf        = []byte("\n\n")
+	crlfcrlf = []byte("\r\n\r\n")
+	lflf     = []byte("\n\n")
 )
-
-func httpHostHeaderFromBytes(b []byte) string {
-	if i := bytes.Index(b, lfHostColon); i != -1 {
-		return string(bytes.TrimSpace(untilEOL(b[i+len(lfHostColon):])))
-	}
-	if i := bytes.Index(b, lfhostColon); i != -1 {
-		return string(bytes.TrimSpace(untilEOL(b[i+len(lfhostColon):])))
-	}
-	return ""
-}
-
-func untilEOL(v []byte) []byte {
-	if i := bytes.IndexByte(v, '\n'); i != -1 {
-		return v[:i]
-	}
-	return v
-}
