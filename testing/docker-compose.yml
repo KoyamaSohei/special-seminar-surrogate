@@ -9,6 +9,5 @@ services:
     build: ../
     depends_on: 
       - redis
-    env_file: test.env
     ports:
       - 80:80
