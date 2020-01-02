@@ -2,19 +2,33 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/sha256"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"net/http"
 )
+
+func genHash(req *http.Request) []byte {
+	h := sha256.New()
+	s := fmt.Sprintf("%s--%s--%s", req.Host, req.Method, req.URL.RequestURI())
+	h.Write([]byte(s))
+	return h.Sum(nil)
+}
 
 func serveConn(c net.Conn) {
 	br := bufio.NewReader(c)
-	rq := httpHostHeader(br)
-	h := rq.Host
-	if rq == nil || h == "" {
+	rq, err := http.ReadRequest(br)
+	if err != nil {
 		return
 	}
-	log.Println(h)
+	h := rq.Host
+	if h == "" {
+		return
+	}
+	k := genHash(rq)
 	ret := make(chan net.IP)
 	go resolveName(h+".", ret)
 	ip := <-ret
@@ -22,53 +36,41 @@ func serveConn(c net.Conn) {
 		log.Println("ip not found")
 		return
 	}
-	if n := br.Buffered(); n > 0 {
-		peeked, _ := br.Peek(br.Buffered())
-		ca, err := getCache(peeked)
-		if err != nil {
-			handleConn(c, peeked, ip, h)
-		} else {
-			c.Write(ca)
-		}
+	ca, err := getCache(k)
+	if err != nil {
+		handleConn(c, ip, h, rq, k)
+	} else {
+		c.Write(ca)
 	}
 }
 
-func handleConn(c net.Conn, p []byte, ip net.IP, h string) {
-	log.Println(string(p))
+func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 	rConn, err := net.DialTCP("tcp", nil, &net.TCPAddr{IP: ip, Port: 80, Zone: h})
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	defer rConn.Close()
-	if _, err := rConn.Write(p); err != nil {
+	defer func() {
+		rConn.Close()
+		c.Close()
+	}()
+	if err := rq.WriteProxy(rConn); err != nil {
 		log.Println(err)
 		return
 	}
-	buf := make([]byte, 0xffff)
-	ok := true
-	ca := make([]byte, 0)
-	for {
-		n, err := rConn.Read(buf)
-		if err != nil {
-			if err != io.EOF {
-				log.Println(err)
-				ok = false
-			}
-			break
-		}
-		b := buf[:n]
-		n, err = c.Write(b)
-		ca = append(ca, b...)
-		if err != nil {
-			log.Println(err)
-			ok = false
-			break
-		}
+	br := bufio.NewReader(rConn)
+	res, err := http.ReadResponse(br, rq)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-	if ok && len(ca) > 0 {
-		go setCache(p, ca)
+	b := new(bytes.Buffer)
+	wt := io.MultiWriter(c, b)
+	res.Write(wt)
+	if rq.Method == "GET" {
+		go setCache(key, res, b)
 	}
+
 }
 
 func serveSurrogate() {
