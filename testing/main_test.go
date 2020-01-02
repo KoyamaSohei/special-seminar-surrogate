@@ -6,7 +6,6 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
-	"os"
 )
 
 func TestEcho(t *testing.T) {
@@ -18,5 +17,5 @@ func TestEcho(t *testing.T) {
 		log.Fatal(err)
 	}
 	a := res.Answer[0].(*dns.A)
-	assert.Equal(t, os.Getenv("TARGET_IP"), a.A.String())
+	assert.Equal(t, "12.34.56.78", a.A.String())
 }
