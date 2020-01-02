@@ -1,0 +1,23 @@
+name: main
+
+on: [push]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v1
+    - name: Install
+      run: go get -u golang.org/x/lint/golint
+    - name: Search
+      run: go list -f {{.Target}} golang.org/x/lint/golint
+    - name: Lint
+      run: /home/runner/go/bin/golint -set_exit_status main
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Build 
+      run: cd testing && docker-compose up --build -d
+    - name: Test
+      run: cd testing && docker-compose exec -T go go test ./testing

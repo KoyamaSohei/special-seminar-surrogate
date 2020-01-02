@@ -6,8 +6,9 @@ services:
     ports:
       - 6379:6379
   go:
-    build: .
+    build: ../
     depends_on: 
       - redis
+    env_file: test.env
     ports:
       - 80:80
