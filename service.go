@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
 func genHash(req *http.Request) []byte {
@@ -75,7 +76,15 @@ func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 
 func serveSurrogate() {
 	initRedis()
-	ln, err := net.Listen("tcp", "0.0.0.0:80")
+	h := os.Getenv("PROXY_HOST")
+	p := os.Getenv("PROXY_PORT")
+	if h == "" {
+		h = "0.0.0.0"
+	}
+	if p == "" {
+		p = "80"
+	}
+	ln, err := net.Listen("tcp", h+":"+p)
 	if err != nil {
 		log.Fatal(err)
 		return
