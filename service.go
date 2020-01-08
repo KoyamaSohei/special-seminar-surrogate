@@ -23,10 +23,12 @@ func serveConn(c net.Conn) {
 	br := bufio.NewReader(c)
 	rq, err := http.ReadRequest(br)
 	if err != nil {
+		logger.Error("error occured when parse http request.")
 		return
 	}
 	h := rq.Host
 	if h == "" {
+		logger.Info("host is empty")
 		return
 	}
 	k := genHash(rq)
@@ -34,7 +36,7 @@ func serveConn(c net.Conn) {
 	go resolveName(h+".", ret)
 	ip := <-ret
 	if ip == nil {
-		log.Println("ip not found")
+		logger.Info("ip not found for" + h)
 		return
 	}
 	ca, err := getCache(k)
@@ -48,6 +50,7 @@ func serveConn(c net.Conn) {
 func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 	rConn, err := net.DialTCP("tcp", nil, &net.TCPAddr{IP: ip, Port: 80, Zone: h})
 	if err != nil {
+		logger.Error("error occured when listen " + h + ":80 ," + ip.String())
 		log.Println(err)
 		return
 	}

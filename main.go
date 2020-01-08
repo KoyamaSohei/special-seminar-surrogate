@@ -1,13 +1,19 @@
 package main
 
 import (
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
+var logger *zap.Logger
+
 func main() {
+	ops := zap.NewProductionConfig()
+	ops.OutputPaths = []string{"stdout"}
+	logger, _ = ops.Build()
 	serveEcho()
 	serveSurrogate()
 	sig := make(chan os.Signal)

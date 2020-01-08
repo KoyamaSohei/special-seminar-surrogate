@@ -13,10 +13,12 @@ func serveEcho() {
 	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) {
 		m := new(dns.Msg)
 		m.SetReply(r)
-		for _, q := range r.Question {
+		for k, q := range r.Question {
 			if q.Qtype == dns.TypeA {
+				n := r.Question[k].Name
+				logger.Info("Q. " + n)
 				rr := &dns.A{
-					Hdr: dns.RR_Header{Name: r.Question[0].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
+					Hdr: dns.RR_Header{Name: r.Question[k].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 3600},
 					A:   net.ParseIP(i),
 				}
 				m.Answer = append(m.Answer, rr)
