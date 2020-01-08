@@ -7,4 +7,5 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/miekg/dns v1.1.24
 	github.com/stretchr/testify v1.4.0
+	go.uber.org/zap v1.13.0
 )
