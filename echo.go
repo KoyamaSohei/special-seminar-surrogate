@@ -9,7 +9,7 @@ import (
 
 func serveEcho() {
 	i := os.Getenv("TARGET_IP")
-
+	logger.Info("TARGET_IP is " + i)
 	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) {
 		m := new(dns.Msg)
 		m.SetReply(r)
