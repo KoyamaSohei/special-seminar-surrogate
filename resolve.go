@@ -8,7 +8,7 @@ import (
 )
 
 func resolveName(name string, ret chan<- net.IP) {
-	d := os.Getenv("DNS_SERVER_IP")
+	d := os.Getenv("DNS_SERVER")
 	log.Println(d)
 	cl := dns.Client{}
 	a := dns.Msg{}
