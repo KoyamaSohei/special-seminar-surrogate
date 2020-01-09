@@ -6,10 +6,11 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"go.uber.org/zap"
 )
 
 func genHash(req *http.Request) []byte {
@@ -23,7 +24,7 @@ func serveConn(c net.Conn) {
 	br := bufio.NewReader(c)
 	rq, err := http.ReadRequest(br)
 	if err != nil {
-		logger.Error("error occured when parse http request.")
+		logger.Error("error occured when parse http request.", zap.Error(err))
 		return
 	}
 	h := rq.Host
@@ -36,7 +37,7 @@ func serveConn(c net.Conn) {
 	go resolveName(h+".", ret)
 	ip := <-ret
 	if ip == nil {
-		logger.Info("ip not found for" + h)
+		logger.Info("ip not found for " + h)
 		return
 	}
 	ca, err := getCache(k)
@@ -50,8 +51,7 @@ func serveConn(c net.Conn) {
 func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 	rConn, err := net.DialTCP("tcp", nil, &net.TCPAddr{IP: ip, Port: 80, Zone: h})
 	if err != nil {
-		logger.Error("error occured when listen " + h + ":80 ," + ip.String())
-		log.Println(err)
+		logger.Error("error occured when listen "+h+":80 ,"+ip.String(), zap.Error(err))
 		return
 	}
 	defer func() {
@@ -59,13 +59,13 @@ func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 		c.Close()
 	}()
 	if err := rq.WriteProxy(rConn); err != nil {
-		log.Println(err)
+		logger.Error("error on writing byte", zap.Error(err))
 		return
 	}
 	br := bufio.NewReader(rConn)
 	res, err := http.ReadResponse(br, rq)
 	if err != nil {
-		log.Println(err)
+		logger.Error("response parse error", zap.Error(err))
 		return
 	}
 	b := new(bytes.Buffer)
@@ -89,13 +89,13 @@ func serveSurrogate() {
 	}
 	ln, err := net.Listen("tcp", h+":"+p)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("tcp listen error", zap.Error(err))
 		return
 	}
 	for {
 		c, err := ln.Accept()
 		if err != nil {
-			log.Fatal(err)
+			logger.Error("error occured when connect to client", zap.Error(err))
 			return
 		}
 		go serveConn(c)

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/miekg/dns"
-	"log"
 	"net"
 	"os"
+
+	"github.com/miekg/dns"
 )
 
 func resolveName(name string, ret chan<- net.IP) {
 	d := os.Getenv("DNS_SERVER")
-	log.Println(d)
+	logger.Info("DNS_SERVER: " + d)
 	cl := dns.Client{}
 	a := dns.Msg{}
 	var (
