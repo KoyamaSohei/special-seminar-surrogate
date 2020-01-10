@@ -20,7 +20,7 @@ func setCache(key []byte, res *http.Response, b *bytes.Buffer) {
 	}
 	logger.Info("expire at " + e.String())
 	ks := base64.StdEncoding.EncodeToString(key)
-	err := client.Set(ks, b, e).Err()
+	err := client.Set(ks, b.Bytes(), e).Err()
 	if err != nil {
 		logger.Error("error occured when set cache", zap.Error(err))
 	}
