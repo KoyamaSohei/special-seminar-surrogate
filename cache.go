@@ -4,35 +4,16 @@ import (
 	"bytes"
 	"encoding/base64"
 	"net/http"
-	"os"
-	"regexp"
 	"time"
 
-	"github.com/go-redis/redis/v7"
 	"go.uber.org/zap"
 )
-
-var client *redis.Client
-
-func initRedis() {
-	h := os.Getenv("REDIS_HOST")
-	p := os.Getenv("REDIS_PASS")
-	client = redis.NewClient(&redis.Options{
-		Addr:     h + ":6379",
-		Password: p,
-		DB:       0,
-	})
-	if client == nil {
-		panic("redis: connection error")
-	}
-}
 
 func setCache(key []byte, res *http.Response, b *bytes.Buffer) {
 	logger.Info(string(b.Bytes()))
 	var e time.Duration = 0
 	if s := res.Header.Get("Surrogate-Control"); s != "" {
-		re := regexp.MustCompile(`max-age=[0-9]+`)
-		n, err := time.ParseDuration(re.FindString(s) + "s")
+		n, err := time.ParseDuration(maxage.FindString(s) + "s")
 		if err == nil {
 			e = n
 		}

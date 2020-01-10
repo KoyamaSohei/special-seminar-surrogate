@@ -2,15 +2,12 @@ package main
 
 import (
 	"net"
-	"os"
 	"regexp"
 
 	"github.com/miekg/dns"
 )
 
 func resolveName(name string, ret chan<- net.IP) {
-	d := os.Getenv("DNS_SERVER")
-	logger.Info("DNS_SERVER: " + d)
 	cl := dns.Client{}
 	a := dns.Msg{}
 	var (
@@ -26,7 +23,7 @@ func resolveName(name string, ret chan<- net.IP) {
 			return
 		}
 		a.SetQuestion(name, t)
-		res, _, err := cl.Exchange(&a, d+":53")
+		res, _, err := cl.Exchange(&a, ds+":53")
 		if err != nil || len(res.Answer) == 0 {
 			ret <- nil
 			return

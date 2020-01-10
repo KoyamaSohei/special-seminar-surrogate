@@ -78,7 +78,6 @@ func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 }
 
 func serveSurrogate() {
-	initRedis()
 	h := os.Getenv("PROXY_HOST")
 	p := os.Getenv("PROXY_PORT")
 	if h == "" {
