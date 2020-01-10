@@ -30,6 +30,7 @@ func serveConn(c net.Conn) {
 	h := rq.Host
 	if h == "" {
 		logger.Info("host is empty")
+		c.Close()
 		return
 	}
 	k := genHash(rq)
@@ -38,6 +39,7 @@ func serveConn(c net.Conn) {
 	ip := <-ret
 	if ip == nil {
 		logger.Info("ip not found for " + h)
+		c.Close()
 		return
 	}
 	ca, err := getCache(k)
@@ -45,6 +47,7 @@ func serveConn(c net.Conn) {
 		handleConn(c, ip, h, rq, k)
 	} else {
 		c.Write(ca)
+		c.Close()
 	}
 }
 
