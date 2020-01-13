@@ -29,7 +29,7 @@ func initConf() {
 	if client == nil {
 		panic("redis: connection error")
 	}
-	maxage = regexp.MustCompile(`max-age=[0-9]+`)
+	maxage = regexp.MustCompile(`max-age=([0-9]+)`)
 	ds = os.Getenv("DNS_SERVER")
 	if ds == "" {
 		panic("DNS_SERVER not found")

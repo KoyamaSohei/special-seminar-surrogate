@@ -13,7 +13,11 @@ func setCache(key []byte, res *http.Response, b *bytes.Buffer) {
 	logger.Info(string(b.Bytes()))
 	var e time.Duration = 0
 	if s := res.Header.Get("Surrogate-Control"); s != "" {
-		n, err := time.ParseDuration(maxage.FindString(s) + "s")
+		b := maxage.FindSubmatch([]byte(s))
+		if len(b) != 2 {
+			return
+		}
+		n, err := time.ParseDuration(string(b[1]) + "s")
 		if err == nil {
 			e = n
 		}
