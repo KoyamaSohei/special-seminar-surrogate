@@ -14,14 +14,19 @@ func resolveName(name string, ret chan<- net.IP) {
 		ans *dns.A
 	)
 	t := dns.TypeA
+	d := ds
+	n := name
 	for ans == nil {
-		if ip.Match([]byte(name)) {
+		if ip.Match([]byte(n)) {
 			logger.Info(name + " is ip address, not domain")
 			ret <- nil
 			return
 		}
-		a.SetQuestion(name, t)
-		res, _, err := cl.Exchange(&a, ds+":53")
+		if n != name {
+			d = "8.8.8.8"
+		}
+		a.SetQuestion(n, t)
+		res, _, err := cl.Exchange(&a, d+":53")
 		if err != nil || len(res.Answer) == 0 {
 			ret <- nil
 			return
@@ -33,8 +38,7 @@ func resolveName(name string, ret chan<- net.IP) {
 				ret <- nil
 				return
 			}
-			name = cn.Target
-			t = dns.TypeCNAME
+			n = cn.Target
 		}
 	}
 	ret <- ans.A
