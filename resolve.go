@@ -2,7 +2,6 @@ package main
 
 import (
 	"net"
-	"regexp"
 
 	"github.com/miekg/dns"
 )
@@ -15,7 +14,6 @@ func resolveName(name string, ret chan<- net.IP) {
 		ans *dns.A
 	)
 	t := dns.TypeA
-	ip := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`)
 	for ans == nil {
 		if ip.Match([]byte(name)) {
 			logger.Info(name + " is ip address, not domain")
