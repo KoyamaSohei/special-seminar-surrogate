@@ -34,6 +34,7 @@ func initConf() {
 	if ds == "" {
 		panic("DNS_SERVER not found")
 	}
+	ip = regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`)
 }
 
 func main() {
