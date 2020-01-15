@@ -73,9 +73,11 @@ func handleConn(c net.Conn, ip net.IP, h string, rq *http.Request, key []byte) {
 	}
 	b := new(bytes.Buffer)
 	wt := io.MultiWriter(c, b)
+	s := res.Header.Get("Surrogate-Control")
+	res.Header.Del("Surrogate-Control")
 	res.Write(wt)
 	if rq.Method == "GET" {
-		go setCache(key, res, b)
+		go setCache(key, s, b)
 	}
 
 }

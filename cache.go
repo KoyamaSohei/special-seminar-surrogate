@@ -3,16 +3,15 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"net/http"
 	"time"
 
 	"go.uber.org/zap"
 )
 
-func setCache(key []byte, res *http.Response, b *bytes.Buffer) {
+func setCache(key []byte, s string, b *bytes.Buffer) {
 	logger.Info(string(b.Bytes()))
-	var e time.Duration = 0
-	if s := res.Header.Get("Surrogate-Control"); s != "" {
+	var e time.Duration = 3600
+	if s != "" {
 		b := maxage.FindSubmatch([]byte(s))
 		if len(b) != 2 {
 			return
