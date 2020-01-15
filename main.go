@@ -11,11 +11,12 @@ import (
 )
 
 var (
-	logger *zap.Logger
-	client *redis.Client
-	maxage *regexp.Regexp
-	ip     *regexp.Regexp
-	ds     string
+	logger  *zap.Logger
+	client  *redis.Client
+	maxage  *regexp.Regexp
+	smaxage *regexp.Regexp
+	ip      *regexp.Regexp
+	ds      string
 )
 
 func initConf() {
@@ -30,6 +31,7 @@ func initConf() {
 		panic("redis: connection error")
 	}
 	maxage = regexp.MustCompile(`max-age=([0-9]+)`)
+	smaxage = regexp.MustCompile(`(s-)?max-age=([0-9]+)`)
 	ds = os.Getenv("DNS_SERVER")
 	if ds == "" {
 		panic("DNS_SERVER not found")

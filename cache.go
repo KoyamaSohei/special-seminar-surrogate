@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func setCache(key []byte, s string, b *bytes.Buffer) {
+func setCache(key []byte, s string, m string, b *bytes.Buffer) {
 	logger.Info(string(b.Bytes()))
 	var e time.Duration = 3600
 	if s != "" {
@@ -17,6 +17,15 @@ func setCache(key []byte, s string, b *bytes.Buffer) {
 			return
 		}
 		n, err := time.ParseDuration(string(b[1]) + "s")
+		if err == nil {
+			e = n
+		}
+	} else if m != "" {
+		b := smaxage.FindSubmatch([]byte(m))
+		if len(b) != 3 {
+			return
+		}
+		n, err := time.ParseDuration(string(b[2]) + "s")
 		if err == nil {
 			e = n
 		}
