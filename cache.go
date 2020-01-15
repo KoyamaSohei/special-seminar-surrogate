@@ -11,7 +11,7 @@ import (
 
 func setCache(key []byte, res *http.Response, b *bytes.Buffer) {
 	logger.Info(string(b.Bytes()))
-	var e time.Duration = 0
+	var e time.Duration = 3600
 	if s := res.Header.Get("Surrogate-Control"); s != "" {
 		b := maxage.FindSubmatch([]byte(s))
 		if len(b) != 2 {
